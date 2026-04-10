@@ -1,2 +1,2 @@
-# Polo-
+# Polo
 Polo
