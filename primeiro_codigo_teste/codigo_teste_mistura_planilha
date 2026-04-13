@@ -1,0 +1,47 @@
+import numpy as np
+import pandas as pd
+
+def calcular_pr_excel(nome_substancia, T, P, arquivo_excel="compostos.xlsx"):
+    # carregar o banco de dados do Excel
+    try:
+        df = pd.read_excel(arquivo_excel)
+    except FileNotFoundError:
+        return "Erro: Arquivo Excel não encontrado!"
+
+    # buscar os dados da substância
+    substancia = df[df['nome'].str.lower() == nome_substancia.lower()]
+    
+    if substancia.empty:
+        return f"Substância '{nome_substancia}' não encontrada na planilha."
+
+    # Extrair valores 
+    Tc = substancia.iloc[0]['tc']
+    Pc = substancia.iloc[0]['pc']
+    omega = substancia.iloc[0]['omega']
+    
+    # Peng-Robinson
+    R = 8.314
+    Tr = T / Tc
+    m = 0.37464 + 1.54226 * omega - 0.26992 * omega**2
+    alpha = (1 + m * (1 - np.sqrt(Tr)))**2
+    
+    a = 0.45724 * (R*2 * Tc*2 / Pc) * alpha
+    b = 0.07780 * (R * Tc / Pc)
+    
+    A = (a * P) / (R * T)**2
+    B = (b * P) / (R * T)
+    
+    coeffs = [1, -(1 - B), (A - 2*B - 3*B*2), -(A*B - B2 - B*3)]
+    roots = np.roots(coeffs)
+    reais = roots[np.isreal(roots)].real
+    
+    return {"Z_liq": min(reais), "Z_vap": max(reais), "Dados": {"Tc": Tc, "Pc": Pc}}
+
+res = calcular_pr_excel("metano", T=200, P=10e5)
+
+if isinstance(res, dict):
+    print(f"Resultados para Metano:")
+    print(f"Z Líquido: {res['Z_liq']:.4f}")
+    print(f"Z Vapor:   {res['Z_vap']:.4f}")
+else:
+    print(res)

@@ -1,0 +1,47 @@
+import numpy as np
+
+def pr_mistura_solver(T, P, z_molar,Tc, Pc, omega, kij=0):
+    R = 8.314
+    n = len(z_molar)
+
+    #calcular ai e bi para cada componente puro
+    ai = []
+    bi = []
+    for i in range (n):
+        tr = T/Tc[i]
+        alpha = (1 + (0.37464 + 1.54226 * omega[i] - 0.26992 * omega[i]*2) * (1 - np.sqrt(tr)))*2
+        ai.append(0.45724 * (R*2 * Tc[i]*2 / Pc[i]) * alpha)
+        bi.append(0.07780 * (R * Tc[i] / Pc[i]))
+        
+    #aplicar regra de mistura 
+    bm = sum(z_molar[i]*bi[i] for i in range(n))
+
+    am = 0 
+    for i in range (n):
+        for j in range(n):
+            term_a = np.sqrt(ai[i]*ai[j])*(1-kij)
+            am += z_molar[i]*z_molar[j]*term_a
+    
+    A = (am*P)/(R*T)**2
+    B = (bm*P)/(R*T)
+
+    # coeficientes da equação cúbica: Z^3 + c2*Z^2 + c1*Z + c0 = 0
+    c2 = -(1 - B)
+    c1 = (A - 2*B - 3*B**2)
+    c0 = -(A*B - B**2 - B**3)
+
+    # encontrar as raízes
+    roots = np.roots([1, c2, c1, c0])
+
+    real_roots = roots[np.isreal(roots)].real
+    return min(real_roots), max(real_roots) #duas raízes, uma máxima e outra mínima 
+
+#exemplo com mistura de 70% de metano e 30% de etano
+#valores tirados de tabelas(internet)
+Tc =  [190.6, 305.4]      
+Pc = [46.0e5, 48.7e5]   
+omega = [0.011, 0.099]   # fator acêntrico
+z_molar = [0.7, 0.3]     # frações molares
+
+Zl, Zg = pr_mistura_solver(250.0, 20e5, z_molar, Tc, Pc, omega)
+print(f" coeficiente Z da mistura - Líquido: {Zl:.4f}, Vapor: {Zg:.4f}")

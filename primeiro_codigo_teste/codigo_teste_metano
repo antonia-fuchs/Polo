@@ -1,7 +1,7 @@
 import numpy as np
 
 def peng_robinson_solver(T, P, Tc, Pc, omega):
-    R = 8.314 # J/(mol*K)
+    R = 8.314 
     Tr = T / Tc
     
     # Parâmetros PR
@@ -12,22 +12,23 @@ def peng_robinson_solver(T, P, Tc, Pc, omega):
     A = (a * P) / (R * T)**2
     B = (b * P) / (R * T)
     
-    # Coeficientes da cúbica: Z^3 + c2*Z^2 + c1*Z + c0 = 0
+    # coeficientes da equação cúbica: Z^3 + c2*Z^2 + c1*Z + c0 = 0
     c2 = -(1 - B)
     c1 = (A - 2*B - 3*B**2)
     c0 = -(A*B - B**2 - B**3)
     
-    # Encontrar as raízes
+    # encontrar as raízes
     roots = np.roots([1, c2, c1, c0])
     
-    # Selecionar raízes reais
+    # selecionar raízes reais
     real_roots = roots[np.isreal(roots)].real
     Z_l = min(real_roots)
     Z_g = max(real_roots)
     
     return Z_l, Z_g
 
-# Exemplo
+#exemplo metano substância pura
+#valores tirados de uma tabela (internet)
 Tc, Pc, omega = 190.56, 45.99e5, 0.011
 Zl, Zg = peng_robinson_solver(200.0, 10e5, Tc, Pc, omega)
 print(f"Z líquido: {Zl}, Z vapor: {Zg}")
